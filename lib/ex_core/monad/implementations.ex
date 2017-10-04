@@ -35,18 +35,33 @@ end
 
 
 defimpl_ex Map, %{}, for: ExCore.Monad do
-  @priority -16
+  @priority -65535
 
   defmacro wrap(value, monad_type) do
     quote do
-      _ = unquote(monad_type)
-      case unquote(value) do
-        {key, value} -> %{key => value}
-        value -> %{value: value}
+      case unquote(monad_type) do
+        %{__struct__: _} -> # Not structs
+          raise %ProtocolEx.UnimplementedProtocolEx{
+            proto: ExCore.Monad,
+            name: :wrap,
+            arity: 2,
+            value: [unquote(value), unquote(monad_type)],
+          }
+        _ ->
+        case unquote(value) do
+          {key, value} -> %{key => value}
+          value -> %{__value__: value}
+        end
       end
     end
   end
 
+  def flat_map(%{__struct__: _} = map, fun) do
+    raise %ProtocolEx.UnimplementedProtocolEx{proto: ExCore.Monad, name: :flat_map, arity: 2, value: [map, fun]}
+  end
+  def flat_map(%{__value__: value} = map, fun) when map_size(map) === 1 do
+    fun.(value)
+  end
   def flat_map(map, fun) do
     map
     |> :maps.to_list()
@@ -56,19 +71,6 @@ defimpl_ex Map, %{}, for: ExCore.Monad do
   defp flat_map([], _fun, returned), do: returned
   defp flat_map([element | rest], fun, returned) do
     flat_map(rest, fun, :maps.merge(returned, fun.(element)))
-  end
-end
-
-
-defimpl_ex Struct, %{__struct__: _}, for: ExCore.Monad do
-  @priority 8
-
-  def wrap(value, monad_type) do
-    raise %ProtocolEx.UnimplementedProtocolEx{proto: ExCore.Monad, name: :wrap, arity: 2, value: [value, monad_type]}
-  end
-
-  def flat_map(map, fun) do
-    raise %ProtocolEx.UnimplementedProtocolEx{proto: ExCore.Monad, name: :flat_map, arity: 2, value: [map, fun]}
   end
 end
 
