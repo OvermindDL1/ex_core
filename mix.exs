@@ -9,6 +9,7 @@ defmodule ExCore.Mixfile do
       start_permanent: Mix.env == :prod,
       compilers: Mix.compilers ++ [:protocol_ex],
       deps: deps(),
+      aliases: aliases(),
     ]
   end
 
@@ -30,5 +31,22 @@ defmodule ExCore.Mixfile do
       {:cortex, "~> 0.2.0", only: [:dev, :test]},
       {:benchee, "~> 0.9.0", only: [:dev, :test]},
     ]
+  end
+
+  defp aliases do
+    [
+      bench: &bench/1
+    ]
+  end
+
+  defp bench(arglist)
+  defp bench([]) do
+    Mix.shell.info "Pass in the name of the benchmark(s) to run"
+  end
+  defp bench(benches) do
+    Enum.map(benches, fn bench ->
+      Mix.Task.reenable(:run)
+      Mix.Tasks.Run.run(["bench/#{bench}_bench.exs"])
+    end)
   end
 end

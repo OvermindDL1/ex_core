@@ -3,8 +3,10 @@ import ProtocolEx
 ## List
 
 defimpl_ex EmptyList, [], for: ExCore.Monad do
+  @priority 65535
+
   defmacro wrap(value, monad_type) do
-    quote do
+    quote generated: true do
       _ = unquote(monad_type)
       [unquote(value)]
     end
@@ -14,7 +16,7 @@ defimpl_ex EmptyList, [], for: ExCore.Monad do
     quote generated: true do
       case unquote(empty_list) do
         [] -> []
-        list -> ExCore.Monad.List.flat_map(list, unquote(fun))
+        list -> ExCore.Monad.List.flat_map(list, unquote(fun)) # This case is purely for testing purposes
       end
     end
   end
@@ -22,8 +24,10 @@ end
 
 
 defimpl_ex List, [_ | _], for: ExCore.Monad do
+  @priority 65534
+
   defmacro wrap(value, monad_type) do
-    quote do
+    quote generated: true do
       _ = unquote(monad_type)
       [unquote(value)]
     end
@@ -38,7 +42,7 @@ defimpl_ex Map, %{}, for: ExCore.Monad do
   @priority -65535
 
   defmacro wrap(value, monad_type) do
-    quote do
+    quote generated: true do
       case unquote(monad_type) do
         %{__struct__: _} -> # Not structs
           raise %ProtocolEx.UnimplementedProtocolEx{
@@ -76,6 +80,8 @@ end
 
 
 defimpl_ex OkValue, {:ok, _}, for: ExCore.Monad do
+  @priority 65532
+
   defmacro wrap(value, monad_type) do
     quote do
       _ = unquote(monad_type)
@@ -91,6 +97,8 @@ defimpl_ex OkValue, {:ok, _}, for: ExCore.Monad do
 end
 
 defimpl_ex Ok, :ok, for: ExCore.Monad do
+  @priority 65533
+
   defmacro wrap(value, monad_type) do
     quote do
       _ = unquote(monad_type)
@@ -110,6 +118,8 @@ defimpl_ex Ok, :ok, for: ExCore.Monad do
 end
 
 defimpl_ex ErrorValue, {:error, _}, for: ExCore.Monad do
+  @priority 65532
+
   defmacro wrap(value, monad_type) do
     quote do
       _ = unquote(monad_type)
@@ -126,6 +136,8 @@ defimpl_ex ErrorValue, {:error, _}, for: ExCore.Monad do
 end
 
 defimpl_ex Error, :error, for: ExCore.Monad do
+  @priority 65533
+
   defmacro wrap(value, monad_type) do
     quote do
       _ = unquote(monad_type)
